@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../pr_compare/screens/pr_compare_screen.dart';
 import '../../redpen_ci/screens/redpen_home_screen.dart';
 import '../../cherry_pick/screens/cherry_pick_screen.dart';
+import '../../worklog/screens/worklog_home_screen.dart';
 import '../../startup/screens/dependency_check_screen.dart';
 
 /// Main home screen with tool selection
@@ -203,6 +204,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const CherryPickScreen()),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _ToolCard(
+                      title: '統一會議工時',
+                      description: '批次記錄團隊成員的 Jira 工時，支援樣板快速填入',
+                      icon: Icons.timer,
+                      color: AppTheme.accentGreen,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const WorklogHomeScreen()),
                       ),
                     ),
                   ],

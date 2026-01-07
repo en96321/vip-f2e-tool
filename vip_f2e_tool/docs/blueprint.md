@@ -1,6 +1,6 @@
 # VIP F2E Tool - 整合實作計畫
 
-將三個獨立的 Flutter 工具整合成一個統一的應用程式。
+將多個獨立的 Flutter 工具整合成一個統一的應用程式。
 
 ## 專案資訊
 
@@ -91,6 +91,25 @@ App 啟動時會檢查以下依賴項目：
 
 ---
 
+### Tool 4: 統一會議工時 (`worklog`)
+**功能**: 批次記錄團隊成員的 Jira 工時
+
+**Dependencies**:
+- `shared_preferences: ^2.2.2`
+
+**主要元件**:
+- `WorklogStorageService` - 儲存成員與樣板設定
+- `JiraService` - 呼叫 Jira REST API 新增 worklog
+- Models: `TeamMember`, `WorklogTemplate`, `WorklogEntry`, `WorklogResult`
+- Screens: `WorklogHomeScreen`, `WorklogSettingsScreen`
+- Widgets: `MemberEditDialog`, `MemberImportDialog`, `TemplateEditDialog`
+
+**功能特點**:
+- 支援樣板快速填入（預設單號、時數、備註、時間、勾選成員）
+- 支援從 Excel 批次匯入成員
+
+---
+
 ## Proposed Changes
 
 ### 1. 專案初始化
@@ -168,13 +187,30 @@ lib/
 │   │   ├── models/
 │   │   ├── services/
 │   │   └── screens/
-│   │
-│   └── cherry_pick/          # Tool 3: 發車工具
+│   |
+│   ├── cherry_pick/          # Tool 3: 發車工具
+│   |   ├── models/
+│   |   ├── services/
+│   |   ├── providers/
+│   |   ├── widgets/
+│   |   └── screens/
+│   |
+│   └── worklog/              # Tool 4: 統一會議工時 ⭐ NEW
 │       ├── models/
+│       |   ├── team_member.dart
+│       |   ├── worklog_template.dart
+│       |   ├── worklog_entry.dart
+│       |   └── worklog_result.dart
 │       ├── services/
-│       ├── providers/
+│       |   ├── worklog_storage_service.dart
+│       |   └── jira_service.dart
 │       ├── widgets/
+│       |   ├── member_edit_dialog.dart
+│       |   ├── member_import_dialog.dart
+│       |   └── template_edit_dialog.dart
 │       └── screens/
+│           ├── worklog_home_screen.dart
+│           └── worklog_settings_screen.dart
 │
 └── shared/                   # 共用 widgets
     └── widgets/
