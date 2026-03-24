@@ -8,10 +8,10 @@ import '../models/worklog_result.dart';
 /// Jira API 服務
 /// 負責呼叫 Jira REST API 新增工時記錄
 class JiraService {
-  static const String _jiraDomain = 'https://104corp.atlassian.net';
+  // static const String _jiraDomain = 'https://104corp.atlassian.net'; // Removed hardcoded domain
 
   /// 為單一成員新增工時記錄
-  Future<WorklogResult> addWorklog(TeamMember member, WorklogEntry entry) async {
+  Future<WorklogResult> addWorklog(String domain, TeamMember member, WorklogEntry entry) async {
     try {
       // 建立 Basic Auth token
       final credentials = base64Encode(utf8.encode('${member.email}:${member.token}'));
@@ -39,16 +39,16 @@ class JiraService {
 
       // 發送 HTTP 請求
       final client = HttpClient();
-      final uri = Uri.parse('$_jiraDomain/rest/api/3/issue/${entry.issueKey}/worklog');
+      final uri = Uri.parse('$domain/rest/api/3/issue/${entry.issueKey}/worklog');
       final request = await client.postUrl(uri);
 
       // 設定 Headers
       request.headers.set('Authorization', 'Basic $credentials');
-      request.headers.set('Content-Type', 'application/json');
+      request.headers.set('Content-Type', 'application/json; charset=utf-8');
       request.headers.set('Accept', 'application/json');
 
-      // 寫入請求內容
-      request.write(jsonEncode(payload));
+      // 寫入請求內容 (使用 UTF-8 編碼)
+      request.add(utf8.encode(jsonEncode(payload)));
 
       // 發送請求並取得回應
       final response = await request.close();
@@ -72,6 +72,7 @@ class JiraService {
 
   /// 批次為多位成員新增工時記錄
   Future<List<WorklogResult>> addWorklogBatch(
+    String domain,
     List<TeamMember> members,
     WorklogEntry entry, {
     void Function(int current, int total)? onProgress,
@@ -82,7 +83,7 @@ class JiraService {
       final member = members[i];
       onProgress?.call(i + 1, members.length);
 
-      final result = await addWorklog(member, entry);
+      final result = await addWorklog(domain, member, entry);
       results.add(result);
 
       // 加入小延遲避免 API 限流

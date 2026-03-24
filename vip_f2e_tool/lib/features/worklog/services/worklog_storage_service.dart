@@ -7,6 +7,7 @@ import '../models/worklog_template.dart';
 class WorklogStorageService {
   static const _keyMembers = 'worklog_members';
   static const _keyTemplates = 'worklog_templates';
+  static const _keyJiraDomain = 'worklog_jira_domain';
 
   late SharedPreferences _prefs;
 
@@ -114,4 +115,12 @@ class WorklogStorageService {
       return null;
     }
   }
+
+  // ==================== 系統設定 ====================
+
+  /// 取得 Jira Domain
+  String get jiraDomain => _prefs.getString(_keyJiraDomain) ?? '';
+
+  /// 設定 Jira Domain
+  set jiraDomain(String value) => _prefs.setString(_keyJiraDomain, value);
 }

@@ -116,6 +116,12 @@ class _WorklogHomeScreenState extends State<WorklogHomeScreen> {
     // 驗證輸入
     final issueKey = _issueKeyController.text.trim();
     final minutes = int.tryParse(_minutesController.text.trim()) ?? 0;
+    final jiraDomain = _storageService.jiraDomain;
+
+    if (jiraDomain.isEmpty) {
+      _showError('請先至設定頁面設定 Jira Domain');
+      return;
+    }
     
     if (issueKey.isEmpty) {
       _showError('請輸入 Jira 單號');
@@ -161,6 +167,7 @@ class _WorklogHomeScreenState extends State<WorklogHomeScreen> {
     });
 
     final results = await _jiraService.addWorklogBatch(
+      jiraDomain,
       selectedMembers,
       entry,
       onProgress: (current, total) {

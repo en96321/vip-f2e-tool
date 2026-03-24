@@ -24,17 +24,20 @@ class _WorklogSettingsScreenState extends State<WorklogSettingsScreen>
 
   List<TeamMember> _members = [];
   List<WorklogTemplate> _templates = [];
+  late final TextEditingController _jiraDomainController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
+    _jiraDomainController = TextEditingController();
     _loadData();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _jiraDomainController.dispose();
     super.dispose();
   }
 
@@ -43,8 +46,27 @@ class _WorklogSettingsScreenState extends State<WorklogSettingsScreen>
     setState(() {
       _members = _storageService.members;
       _templates = _storageService.templates;
+      _members = _storageService.members;
+      _templates = _storageService.templates;
+      _jiraDomainController.text = _storageService.jiraDomain;
       _isLoading = false;
     });
+  }
+
+  // ==================== 系統設定 ====================
+
+  void _saveJiraDomain() {
+    final domain = _jiraDomainController.text.trim();
+    if (domain.isNotEmpty && !domain.startsWith('http')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Jira Domain 格式錯誤，請包含 https://')),
+      );
+      return;
+    }
+    _storageService.jiraDomain = domain;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('已儲存系統設定')),
+    );
   }
 
   // ==================== 成員管理 ====================
@@ -180,6 +202,7 @@ class _WorklogSettingsScreenState extends State<WorklogSettingsScreen>
           tabs: const [
             Tab(text: '成員管理'),
             Tab(text: '樣板管理'),
+            Tab(text: '系統設定'),
           ],
         ),
       ),
@@ -190,6 +213,7 @@ class _WorklogSettingsScreenState extends State<WorklogSettingsScreen>
               children: [
                 _buildMembersTab(),
                 _buildTemplatesTab(),
+                _buildSettingsTab(),
               ],
             ),
     );
@@ -338,6 +362,39 @@ class _WorklogSettingsScreenState extends State<WorklogSettingsScreen>
           ),
         ),
       ],
+    );
+  }
+  Widget _buildSettingsTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Jira 設定',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _jiraDomainController,
+            decoration: const InputDecoration(
+              labelText: 'Jira Domain',
+              hintText: '例如：https://104corp.atlassian.net',
+              helperText: '請輸入完整的 Jira 網址，包含 https://',
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.url,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _saveJiraDomain,
+            child: const Text('儲存設定'),
+          ),
+        ],
+      ),
     );
   }
 }
