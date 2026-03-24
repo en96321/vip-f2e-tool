@@ -7,6 +7,7 @@ import '../../pr_compare/screens/pr_compare_screen.dart';
 import '../../redpen_ci/screens/redpen_home_screen.dart';
 import '../../cherry_pick/screens/cherry_pick_screen.dart';
 import '../../worklog/screens/worklog_home_screen.dart';
+import '../../redpen_report/screens/redpen_report_screen.dart';
 import '../../startup/screens/dependency_check_screen.dart';
 
 /// Main home screen with tool selection
@@ -215,6 +216,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const WorklogHomeScreen()),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _ToolCard(
+                      title: 'RedPen 報告合併',
+                      description: '合併新舊 RedPen 掃描報告，自動複製歷史 Comment 並標記新問題',
+                      icon: Icons.merge,
+                      color: AppTheme.accentRed,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const RedpenReportScreen()),
                       ),
                     ),
                   ],
