@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/services/dependency_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -158,14 +159,58 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
+      final currentVersion = 'v${info.version}';
       setState(() {
-        _version = 'v${info.version}';
+        _version = currentVersion;
       });
+      _checkAndShowChangelog(currentVersion);
     } catch (_) {
       setState(() {
         _version = 'v1.0.0';
       });
     }
+  }
+
+  Future<void> _checkAndShowChangelog(String currentVersion) async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastVersion = prefs.getString('last_changelog_version');
+    
+    if (lastVersion != currentVersion) {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showChangelogDialog();
+        });
+      }
+      await prefs.setString('last_changelog_version', currentVersion);
+    }
+  }
+
+  void _showChangelogDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('更新日誌'),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('v1.0.8', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              SizedBox(height: 8),
+              Text('• 新增：首頁新增切換版型、並可以調整排序'),
+              Text('• 新增：首頁加入版本更新日誌與 GitHub 連結')
+              // 在發布新版本時，直接修改或新增此處的文字內容
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('了解'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _checkForUpdates() async {
@@ -268,6 +313,17 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _isUpdating = false;
       });
+    }
+  }
+
+  Future<void> _launchURL(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('無法開啟連結: $urlString')),
+        );
+      }
     }
   }
 
@@ -433,6 +489,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
+                  TextButton.icon(
+                    onPressed: _showChangelogDialog,
+                    icon: const Icon(Icons.history, size: 16),
+                    label: const Text('更新日誌'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[600],
+                      textStyle: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  TextButton.icon(
+                    onPressed: () => _launchURL('https://github.com/en96321/vip-f2e-tool'),
+                    icon: const Icon(Icons.code, size: 16),
+                    label: const Text('GitHub'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[600],
+                      textStyle: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
                   TextButton.icon(
                     onPressed: _isCheckingUpdate ? null : _checkForUpdates,
                     icon: _isCheckingUpdate
