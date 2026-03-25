@@ -195,6 +195,10 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              Text('v1.0.9', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              SizedBox(height: 8),
+              Text('• 擴增：Redpen CI 的 Commit 數量設定選項，支援 50 與 100 個'),
+              SizedBox(height: 16),
               Text('v1.0.8', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               SizedBox(height: 8),
               Text('• 新增：首頁新增切換版型、並可以調整排序'),

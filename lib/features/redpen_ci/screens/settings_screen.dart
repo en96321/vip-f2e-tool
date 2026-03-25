@@ -201,7 +201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(width: 16),
                     DropdownButton<int>(
                       value: _commitCount,
-                      items: [3, 5, 10, 15, 20]
+                      items: [3, 5, 10, 15, 20, 50, 100]
                           .map((n) => DropdownMenuItem(value: n, child: Text('$n')))
                           .toList(),
                       onChanged: (value) {

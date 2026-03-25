@@ -2,7 +2,7 @@ name: vip_f2e_tool
 description: "VIP F2E Tool - 整合 PR 比對、RedPen CI、發車工具"
 publish_to: 'none'
 
-version: 1.0.7+1
+version: 1.0.9+1
 
 environment:
   sdk: ^3.10.4
