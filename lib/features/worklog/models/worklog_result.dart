@@ -5,19 +5,22 @@ class WorklogResult {
   final TeamMember member;
   final bool success;
   final String message;
+  final String? worklogId;
 
   WorklogResult({
     required this.member,
     required this.success,
     required this.message,
+    this.worklogId,
   });
 
   /// 成功結果
-  factory WorklogResult.success(TeamMember member) {
+  factory WorklogResult.success(TeamMember member, {String? worklogId}) {
     return WorklogResult(
       member: member,
       success: true,
       message: '成功',
+      worklogId: worklogId,
     );
   }
 

@@ -23,6 +23,11 @@ class CherryPickScreen extends ConsumerWidget {
             Icon(Icons.directions_bus, size: 28, color: Colors.orange[400]),
             const SizedBox(width: 8),
             const Text('發車工具'),
+            const SizedBox(width: 8),
+            const Text(
+              '(貢獻者 Brian.Chao)',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
           ],
         ),
         actions: [

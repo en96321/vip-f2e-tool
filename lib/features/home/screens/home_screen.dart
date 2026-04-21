@@ -69,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ToolItem(
       id: 'cherry_pick',
       title: '發車工具',
-      description: 'Cherry-pick 發車工具，批次處理多個 commit 到目標分支',
+      description: 'Cherry-pick 發車工具，批次處理多個 commit 到目標分支\n(貢獻者 Brian.Chao)',
       icon: Icons.directions_bus,
       color: AppTheme.accentOrange,
       screenBuilder: (_) => const CherryPickScreen(),
@@ -195,6 +195,11 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              Text('v1.1.0', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              SizedBox(height: 8),
+              Text('• 新增：會議工時加入歷史紀錄與撤銷功能'),
+              Text('• 更新：發車工具加上貢獻者標示'),
+              SizedBox(height: 16),
               Text('v1.0.9', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               SizedBox(height: 8),
               Text('• 擴增：Redpen CI 的 Commit 數量設定選項，支援 50 與 100 個'),
@@ -393,6 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 200,
                       child: _ToolGridCard(
                         title: tool.title,
+                        description: tool.description,
                         icon: tool.icon,
                         color: tool.color,
                         onTap: null,
@@ -406,6 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 200,
                       child: _ToolGridCard(
                         title: tool.title,
+                        description: tool.description,
                         icon: tool.icon,
                         color: tool.color,
                         onTap: null,
@@ -424,6 +431,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         : null,
                     child: _ToolGridCard(
                       title: tool.title,
+                      description: tool.description,
                       icon: tool.icon,
                       color: tool.color,
                       onTap: () => Navigator.push(
@@ -665,12 +673,14 @@ class _ToolCardState extends State<_ToolCard> {
 
 class _ToolGridCard extends StatefulWidget {
   final String title;
+  final String description;
   final IconData icon;
   final Color color;
   final VoidCallback? onTap;
 
   const _ToolGridCard({
     required this.title,
+    required this.description,
     required this.icon,
     required this.color,
     this.onTap,
@@ -725,6 +735,17 @@ class _ToolGridCardState extends State<_ToolGridCard> {
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.description,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

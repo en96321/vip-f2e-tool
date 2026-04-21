@@ -4,9 +4,11 @@ import '../models/team_member.dart';
 import '../models/worklog_entry.dart';
 import '../models/worklog_result.dart';
 import '../models/worklog_template.dart';
+import '../models/worklog_history.dart';
 import '../services/jira_service.dart';
 import '../services/worklog_storage_service.dart';
 import 'worklog_settings_screen.dart';
+import 'worklog_history_screen.dart';
 
 /// 統一會議工時記錄主畫面
 class WorklogHomeScreen extends StatefulWidget {
@@ -76,7 +78,12 @@ class _WorklogHomeScreenState extends State<WorklogHomeScreen> {
       _minutesController.text = template.minutes.toString();
       _commentController.text = template.comment;
       _selectedTime = template.defaultTime;
-      _selectedMemberIds = Set.from(template.selectedMemberIds);
+      // 過濾掉已經被刪除的成員
+      _selectedMemberIds = Set.from(
+        template.selectedMemberIds.where(
+          (id) => _members.any((member) => member.id == id)
+        )
+      );
     });
   }
 
@@ -183,6 +190,28 @@ class _WorklogHomeScreenState extends State<WorklogHomeScreen> {
       _results = results;
     });
 
+    // 儲存成功新增的歷史紀錄
+    final successfulItems = results
+        .where((r) => r.success && r.worklogId != null)
+        .map((r) => WorklogHistoryItem(
+              memberId: r.member.id,
+              memberName: r.member.name,
+              worklogId: r.worklogId!,
+            ))
+        .toList();
+
+    if (successfulItems.isNotEmpty) {
+      final history = WorklogHistory(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        createdAt: DateTime.now(),
+        issueKey: entry.issueKey,
+        minutes: entry.minutes,
+        comment: entry.comment,
+        items: successfulItems,
+      );
+      _storageService.addHistory(history);
+    }
+
     _showResultDialog(results);
   }
 
@@ -271,12 +300,24 @@ class _WorklogHomeScreenState extends State<WorklogHomeScreen> {
     await _loadData();
   }
 
+  Future<void> _openHistory() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const WorklogHistoryScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('統一會議工時'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: '操作紀錄',
+            onPressed: _openHistory,
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: '設定',

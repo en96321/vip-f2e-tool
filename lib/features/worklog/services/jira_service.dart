@@ -58,7 +58,12 @@ class JiraService {
 
       // 檢查結果
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return WorklogResult.success(member);
+        String? worklogId;
+        try {
+          final data = jsonDecode(responseBody);
+          worklogId = data['id']?.toString();
+        } catch (_) {}
+        return WorklogResult.success(member, worklogId: worklogId);
       } else {
         return WorklogResult.failure(
           member,
@@ -93,5 +98,30 @@ class JiraService {
     }
 
     return results;
+  }
+
+  /// 刪除單筆工時記錄
+  Future<WorklogResult> deleteWorklog(String domain, TeamMember member, String issueKey, String worklogId) async {
+    try {
+      final credentials = base64Encode(utf8.encode('${member.email}:${member.token}'));
+      final client = HttpClient();
+      final uri = Uri.parse('$domain/rest/api/3/issue/$issueKey/worklog/$worklogId');
+      final request = await client.deleteUrl(uri);
+
+      request.headers.set('Authorization', 'Basic $credentials');
+      request.headers.set('Accept', 'application/json');
+
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+      client.close();
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return WorklogResult.success(member, worklogId: worklogId);
+      } else {
+        return WorklogResult.failure(member, 'HTTP ${response.statusCode}: $responseBody');
+      }
+    } catch (e) {
+      return WorklogResult.failure(member, '錯誤：${e.toString()}');
+    }
   }
 }

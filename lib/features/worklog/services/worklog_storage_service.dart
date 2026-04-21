@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/team_member.dart';
 import '../models/worklog_template.dart';
+import '../models/worklog_history.dart';
 
 /// 工時記錄儲存服務
 /// 使用 SharedPreferences 儲存成員清單和樣板設定
@@ -8,6 +9,8 @@ class WorklogStorageService {
   static const _keyMembers = 'worklog_members';
   static const _keyTemplates = 'worklog_templates';
   static const _keyJiraDomain = 'worklog_jira_domain';
+  static const _keyHistories = 'worklog_histories';
+  static const int _maxHistoryLimit = 50;
 
   late SharedPreferences _prefs;
 
@@ -123,4 +126,43 @@ class WorklogStorageService {
 
   /// 設定 Jira Domain
   set jiraDomain(String value) => _prefs.setString(_keyJiraDomain, value);
+
+  // ==================== 歷史紀錄管理 ====================
+
+  /// 取得所有歷史紀錄
+  List<WorklogHistory> get histories {
+    final jsonStr = _prefs.getString(_keyHistories);
+    if (jsonStr == null || jsonStr.isEmpty) return [];
+    try {
+      return WorklogHistory.decodeList(jsonStr);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// 設定歷史紀錄
+  set histories(List<WorklogHistory> value) {
+    if (value.length > _maxHistoryLimit) {
+      value.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      value = value.take(_maxHistoryLimit).toList();
+    }
+    _prefs.setString(_keyHistories, WorklogHistory.encodeList(value));
+  }
+
+  /// 新增歷史紀錄
+  void addHistory(WorklogHistory history) {
+    final list = histories;
+    list.insert(0, history);
+    histories = list;
+  }
+
+  /// 更新歷史紀錄
+  void updateHistory(WorklogHistory history) {
+    final list = histories;
+    final index = list.indexWhere((h) => h.id == history.id);
+    if (index != -1) {
+      list[index] = history;
+      histories = list;
+    }
+  }
 }
