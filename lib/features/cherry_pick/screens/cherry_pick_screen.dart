@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_state.dart';
@@ -37,7 +38,7 @@ class CherryPickScreen extends ConsumerWidget {
               child: Chip(
                 avatar: const Icon(Icons.save, size: 16, color: Colors.orange),
                 label: const Text('有未完成的進度'),
-                backgroundColor: Colors.orange.withOpacity(0.2),
+                backgroundColor: Colors.orange.withValues(alpha: 0.2),
               ),
             ),
         ],
@@ -62,6 +63,10 @@ class CherryPickScreen extends ConsumerWidget {
           Expanded(
             child: Column(
               children: [
+                // Error banner
+                if (appState.errorMessage != null && appState.errorMessage!.isNotEmpty)
+                  _buildErrorBanner(context, appState, notifier),
+
                 // Saved progress banner
                 if (appState.savedProgress != null)
                   _buildSavedProgressBanner(appState, notifier),
@@ -89,7 +94,7 @@ class CherryPickScreen extends ConsumerWidget {
                               ),
                             ),
                             const Spacer(),
-                            _buildStatusIndicator(appState),
+                            _buildStatusIndicator(context, appState),
                           ],
                         ),
                       ),
@@ -208,6 +213,66 @@ class CherryPickScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildErrorBanner(
+      BuildContext context, AppState appState, AppStateNotifier notifier) {
+    final errorMessage = appState.errorMessage!;
+
+    return Container(
+      margin: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '執行發生錯誤',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SelectableText(
+                  errorMessage,
+                  style: const TextStyle(fontSize: 12, color: Colors.redAccent),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.copy, size: 18, color: Colors.red),
+            tooltip: '複製錯誤訊息',
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: errorMessage));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('已複製錯誤訊息至剪貼簿'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18, color: Colors.grey),
+            tooltip: '關閉提示',
+            onPressed: notifier.clearError,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSavedProgressBanner(AppState appState, AppStateNotifier notifier) {
     final progress = appState.savedProgress!;
 
@@ -215,9 +280,9 @@ class CherryPickScreen extends ConsumerWidget {
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.15),
+        color: Colors.blue.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -256,7 +321,7 @@ class CherryPickScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusIndicator(AppState appState) {
+  Widget _buildStatusIndicator(BuildContext context, AppState appState) {
     Color color;
     String text;
     IconData icon;
@@ -296,10 +361,10 @@ class CherryPickScreen extends ConsumerWidget {
         break;
     }
 
-    return Container(
+    final chipWidget = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -310,6 +375,61 @@ class CherryPickScreen extends ConsumerWidget {
           Text(
             text,
             style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+          if (appState.status == AppStatus.error && appState.errorMessage != null) ...[
+            const SizedBox(width: 4),
+            const Icon(Icons.info_outline, size: 12, color: Colors.red),
+          ],
+        ],
+      ),
+    );
+
+    if (appState.status == AppStatus.error && appState.errorMessage != null) {
+      return Tooltip(
+        message: '點擊查看錯誤詳情',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _showErrorDialog(context, appState.errorMessage!),
+          child: chipWidget,
+        ),
+      );
+    }
+
+    return chipWidget;
+  }
+
+  void _showErrorDialog(BuildContext context, String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.error, color: Colors.red),
+            SizedBox(width: 8),
+            Text('錯誤詳細內容'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: SelectableText(
+            errorMessage,
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          ),
+        ),
+        actions: [
+          TextButton.icon(
+            icon: const Icon(Icons.copy, size: 16),
+            label: const Text('複製錯誤內容'),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: errorMessage));
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('已複製錯誤訊息至剪貼簿')),
+              );
+            },
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('關閉'),
           ),
         ],
       ),

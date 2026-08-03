@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -324,6 +323,7 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
       _addLog('🔍 搜尋完成，找到 ${manager.allCommits.length} 個 commits', LogLevel.success);
     } catch (e) {
+      _addLog('❌ 搜尋 Commit 失敗: $e', LogLevel.error);
       state = state.copyWith(
         status: AppStatus.error,
         errorMessage: e.toString(),
@@ -401,6 +401,7 @@ class AppStateNotifier extends StateNotifier<AppState> {
         );
       }
     } catch (e) {
+      _addLog('❌ 執行 Cherry-pick 失敗: $e', LogLevel.error);
       state = state.copyWith(
         status: AppStatus.error,
         errorMessage: e.toString(),
@@ -502,6 +503,7 @@ class AppStateNotifier extends StateNotifier<AppState> {
         );
       }
     } catch (e) {
+      _addLog('❌ 繼續執行失敗: $e', LogLevel.error);
       state = state.copyWith(
         status: AppStatus.error,
         errorMessage: e.toString(),
@@ -535,13 +537,25 @@ class AppStateNotifier extends StateNotifier<AppState> {
   Future<void> openTerminal() async {
     if (state.workingDirectory == null) return;
 
-    await Process.run('open', ['-a', 'Terminal', state.workingDirectory!]);
+    try {
+      await Process.run('open', ['-a', 'Terminal', state.workingDirectory!]);
+    } catch (e) {
+      _addLog('❌ 無法開啟 Terminal: $e', LogLevel.error);
+    }
   }
 
   Future<void> openVSCode() async {
     if (state.workingDirectory == null) return;
 
-    await Process.run('code', [state.workingDirectory!]);
+    try {
+      // 優先使用 macOS 原生 open 指令開啟 Visual Studio Code，避免 code CLI 結束時管道異常
+      final result = await Process.run('open', ['-a', 'Visual Studio Code', state.workingDirectory!]);
+      if (result.exitCode != 0) {
+        await Process.run('code', [state.workingDirectory!]);
+      }
+    } catch (e) {
+      _addLog('❌ 無法開啟 VS Code: $e', LogLevel.error);
+    }
   }
 }
 
